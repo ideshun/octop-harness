@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from octop_harness.plugins.inbound import InboundHandler, validate_inbound_handler
 from octop_harness.plugins.manifest import PluginManifest
 from octop_harness.plugins.registry import (
     ChannelRegistration,
@@ -23,7 +24,7 @@ class PluginContext:
         self._source_path = source_path
         self._tools: list[ToolRegistration] = []
         self._middleware: list[MiddlewareRegistration] = []
-        self._inbound: list[Any] = []
+        self._inbound: list[InboundHandler] = []
         self._channels: list[ChannelRegistration] = []
         self._skills_dir: Path | None = None
         self._model_factory: Any | None = None
@@ -71,7 +72,7 @@ class PluginContext:
             ),
         )
 
-    def inbound(self, handler: Any) -> None:
+    def inbound(self, handler: InboundHandler) -> None:
         """Register a pre-agent admission handler. Requires host gateway support.
 
         handler.handle(channel, message, dispatch) -> awaitable[bool]. True
@@ -79,8 +80,7 @@ class PluginContext:
         """
         if self._manifest.kind != "hook":
             raise ValueError("inbound handlers require kind=hook")
-        if not callable(getattr(handler, "handle", None)) or not callable(getattr(handler, "close", None)):
-            raise ValueError("inbound handler must implement handle() and close()")
+        validate_inbound_handler(handler)
         self._inbound.append(handler)
 
     def channel(

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add host-neutral inbound plugin registration, synchronous cancellation on replacement/unload, and optional decision-scoring contracts. Gateway execution remains a host responsibility.
+
 - Pin replies and visible thinking to the configured language, after workspace memory.
 
 - Add `ChatRequest.allowed_tools` as an optional per-invocation ceiling, enforced at model and tool-execution boundaries and inherited by managed subagents. Existing requests retain their tool behavior.

@@ -1822,6 +1822,7 @@ def test_summarization_factory_patch_is_exclusive() -> None:
     assert second_in.is_set()
     assert graph.create_summarization_middleware is original
 
+
 @pytest.mark.parametrize("auto_load", [False, True])
 def test_managed_subagents_receive_turn_tool_filter(
     cfg: HarnessAgentConfig,

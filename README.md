@@ -451,3 +451,7 @@ that emits `InboundMessage.allowed_tools` and an Octop version that forwards it.
 The Octop release must upgrade both SDKs; older gateways silently lack the field,
 while older harness versions reject the new request parameter. Source integration
 tests are distinct from acceptance with the released, locked dependency set.
+
+## Inbound plugin admission
+
+Hook plugins can register host-neutral pre-agent handlers and optionally use host decision scoring. See [contracts and lifecycle](docs/inbound-plugins.md). The host must provide the Gateway bridge.

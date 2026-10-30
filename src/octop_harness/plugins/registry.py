@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from octop_harness.plugins.inbound import InboundHandler, validate_inbound_handler
 from octop_harness.plugins.manifest import PluginManifest
 
 ConfigField = dict[str, Any]
 ToolFn = Callable[..., Any]
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -76,7 +79,7 @@ class LoadedPlugin:
     skills_dir: Path | None = None
     diagnostics: list[str] = field(default_factory=list)
     context: Any | None = None
-    inbound: list[Any] = field(default_factory=list)
+    inbound: list[InboundHandler] = field(default_factory=list)
 
 
 class PluginRegistry:
@@ -101,6 +104,8 @@ class PluginRegistry:
             self.unregister(plugin_id)
 
     def register(self, loaded: LoadedPlugin) -> None:
+        for handler in loaded.inbound:
+            validate_inbound_handler(handler)
         if any(reg.plugin_id != loaded.manifest.id for reg in loaded.channels):
             raise ValueError("channel registration owner must match plugin ID")
         kinds = [reg.kind for reg in loaded.channels]
@@ -123,11 +128,10 @@ class PluginRegistry:
                 try:
                     handler.close()
                 except Exception:
-                    import logging
-                    logging.getLogger(__name__).warning("inbound close failed: plugin=%s", plugin_id)
+                    logger.exception("inbound close failed: plugin=%s", plugin_id)
         return removed
 
-    def all_inbound(self) -> list[Any]:
+    def all_inbound(self) -> list[InboundHandler]:
         return [handler for plugin in self._plugins.values() for handler in plugin.inbound]
 
     def get(self, plugin_id: str) -> LoadedPlugin | None:
