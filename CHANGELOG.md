@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Unreleased]
-
 ### Added
 
 - Add host-neutral inbound plugin registration, synchronous cancellation on replacement/unload, and optional decision-scoring contracts. Gateway execution remains a host responsibility.
 - Add `ChatRequest.allowed_tools` as an optional per-invocation ceiling, enforced at model and tool-execution boundaries and inherited by managed subagents. Existing requests retain their tool behavior.
+
+### 修复
+
+- OpenSandbox 可以创建、删除和移动工作区路径。专家启动、技能卸载和工作区重命名不再因为沙箱没有这些操作而失败。
 
 ## [1.0.6] - 2026-11-01
 
