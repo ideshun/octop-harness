@@ -505,3 +505,5 @@ tests are distinct from acceptance with the released, locked dependency set.
 ## Inbound plugin admission
 
 Hook plugins can register host-neutral pre-agent handlers and optionally use host decision scoring. See [contracts and lifecycle](docs/inbound-plugins.md). The host must provide the Gateway bridge.
+
+All plugin kinds can register `ctx.settings(provider)` to own their settings schema and storage. Inbound handlers may implement the optional synchronous `InboundTextRenderer` contract to assemble model text without host-specific prompt labels; authorization, media and delivery remain with the host.
