@@ -142,6 +142,20 @@ octop-harness is a library (not an app) that turns deepagents into a deployable 
   text is not logged.
   Set `memory_recall_inject_enabled=False` on `HarnessAgentConfig` to disable
   fresh automatic recall while retaining memory tools and exact replay of old turns.
+- Host middlewares registered via `HarnessAgentConfig(middleware=[...])` run
+  after `MemoryMiddleware` and can call `get_recall_candidates(message)` (from
+  `octop_harness.middleware`) in `before_model` to inspect a read-only tuple of
+  `RecallCandidate` records (`atom_id`, 1-based `rank`, `layer`, `role_hint`,
+  `timestamp_iso`) stamped for the turn. It returns `()` when recall ran with no
+  hits, and `None` when recall is disabled, unsupported, or invalidated by a
+  content rewrite. Read it in `before_model` rather than `wrap_model_call`,
+  because `MemoryMiddleware` replays and strips private snapshot metadata before
+  forwarding API copies.
+
+You can guide candidate and episode extraction with `memory_extract_keep_rules` and
+`memory_extract_skip_rules`. Each accepts up to 2,000 characters. Empty values use
+the built-in prompt. Explicit rules require a version of octop-memory that exposes
+`MemoryService.supports_extraction_rules`.
 
 Memory extraction can be configured independently of main chat:
 `memory_extract_max_tokens` sets the candidate/episode output budget (default
@@ -249,7 +263,7 @@ custom adapter without adding arbitrary protocol or authentication fields to dec
 
 ## How to Use
 
-Current release: **1.0.11**. See the [release notes](CHANGELOG.md).
+Current release: **1.0.13**. See the [release notes](CHANGELOG.md).
 
 ### Prerequisites
 - **Python 3.12+**
@@ -381,7 +395,7 @@ and released when the resumed stream finishes or the agent closes.
 ### Scheduled SQLite checkpoint backups
 
 PostgreSQL checkpoint tables are shared. Scheduled retention skips them.
-With octop-memory 1.0.5, hosts can prune a verified thread offline after
+Hosts can prune a verified thread offline after
 pausing its execution, resumption and forks across all hosts.
 
 With a Memory version exposing `acheckpoint_activity(thread_id)`, Harness holds

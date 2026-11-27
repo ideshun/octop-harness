@@ -19,7 +19,6 @@ from langgraph.checkpoint.memory import InMemorySaver
 from octop_harness.config import HarnessAgentConfig
 from octop_harness.middleware.conversation_mode import ConversationModeMiddleware
 from octop_harness.middleware.tools_filter import ToolsFilterMiddleware
-from octop_harness.middleware.turn_note import is_turn_note
 from octop_harness.request import ChatRequest
 
 
@@ -45,21 +44,22 @@ class ForcedToolModel(BaseChatModel):
         **kwargs: object,
     ) -> ChatResult:
         del stop, run_manager, kwargs
-        user_message = next(
-            (
-                message
-                for message in reversed(messages)
-                if isinstance(message, HumanMessage) and not is_turn_note(message)
-            ),
-            messages[-1],
-        )
         message = (
             AIMessage(
                 content="",
                 tool_calls=[
                     {
                         "name": "read_file",
-                        "args": {"path": str(user_message.content)},
+                        "args": {
+                            "path": next(
+                                (
+                                    str(m.content)
+                                    for m in reversed(messages)
+                                    if isinstance(m, HumanMessage) and not str(m.content).startswith("[turn note]")
+                                ),
+                                str(messages[-1].content),
+                            )
+                        },
                         "id": "read-1",
                         "type": "tool_call",
                     }
