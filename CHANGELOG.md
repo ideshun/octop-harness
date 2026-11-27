@@ -7,24 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Add a generic `ctx.settings(provider)` registration for every plugin kind and an optional `InboundTextRenderer` contract. Hosts own access and delivery; plugins own settings and message copy.
-- Add host-neutral inbound plugin registration, synchronous cancellation on replacement/unload, and optional decision-scoring contracts. Gateway execution remains a host responsibility.
-- Add `ChatRequest.allowed_tools` as an optional per-invocation ceiling, enforced at model and tool-execution boundaries and inherited by managed subagents. Existing requests retain their tool behavior.
+## [1.0.13] - 2026-11-26
 
 ### 新增
 
-- 新增 CubeSandbox 后端，支持远程命令、虚拟文件系统，以及基于 PostgreSQL 锁的沙箱复用。
-- CubeSandbox 工作区可镜像到对象存储：新建沙箱自动回灌，`archive_workspace()` 负责归档。
-- 文件系统中间件按回合记录文件写入：每个文件保留本轮首次写入前与最后一次写入后的内容，主代理和子代理共用同一条捕获链路；宿主可据此生成回合级 diff，并在文件未被后续改动时回滚。
+- 支持按专家配置记忆提取的保留规则和跳过规则。
+
+### 变更
+
+- 将 `octop-memory` 的最低依赖版本从 `1.0.6` 提升至 `1.0.7`。
 
 ### 修复
 
-- 托管 ACP 智能体初始化时保留 checkpointer，从而可以往已有会话里追加消息。
-- 华为云 OBS 客户端改为传入单个秒级超时。原先传入 `(connect, read)` 元组，探测和浏览会在 `socket.settimeout` 上报 `'tuple' object cannot be interpreted as an integer`（Octop#2971）。
-- 子代理目录里没有 YAML frontmatter 的普通 Markdown 不再打成坏代理；未知工具名的日志带上所在文件（Octop#2977）。
-- `browser_use` 打开页面时使用与 `web_fetch` 相同的地址检查，并拒绝用配置名或截图路径跳出目录。
+- 首次及后续动态挂载的 MCP 服务可在当轮显式选择；未选择的服务工具继续隐藏。
+- `memory_search` 返回带图原话的文字，过滤图片引用和图片数据；跳过只有图片的命中。旧库原话索引待升级时，工具会显示升级提示，并保留已命中的长期记忆。
+- `memory_get` 打开带图原始记录时保留文字和分页位置，纯图片摘录返回没有可用内容。
+- 修复事件循环退出时同步关闭 SQLite checkpointer 可能触发的后台线程异常。
+
+## [1.0.12] - 2026-11-26
+
+### 新增
+
+- 新增按回合限制 `allowed_tools` 的能力，并在工具执行入口强制执行。
+- 新增只读记忆召回候选接口，宿主中间件可获取候选元数据。
+- 新增 CubeSandbox 后端及工作区恢复能力，支持远程命令、虚拟文件系统和沙箱复用。
+- 文件系统中间件按回合捕获文件写入前后状态，支持生成变更记录和恢复。
+
+### 修复
+
+- 将 `octop-memory` 最低依赖升级到 `1.0.6`。
+- 修复记忆运行时对已移除 LangGraph 消息 reducer 的依赖。
+- SQLite checkpoint 数据库损坏时，中止裁剪与 vacuum，避免继续破坏数据。
+- 修复浏览器导航目标和 profile 名称的路径安全检查。
+- 工具筛选时始终保留 `memory_save`。
+- OBS 客户端改用单个秒级超时，并跳过 agents 目录中缺少 YAML frontmatter 的普通 Markdown。
+- 托管 ACP 智能体初始化时保留 checkpointer，支持继续已有会话。
 
 ## [1.0.11] - 2026-11-17
 
